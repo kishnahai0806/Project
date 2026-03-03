@@ -10,3 +10,8 @@
 app:
   seed:
     enabled: true
+
+management:
+  health:
+    redis:
+      enabled: false

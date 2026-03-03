@@ -114,6 +114,7 @@ Search supports:
 
 Notes:
 - Integration tests use Testcontainers PostgreSQL and require Java/Testcontainers to reach your host Docker daemon directly.
+- Test profile disables Redis actuator health (`management.health.redis.enabled=false`) so `/actuator/health` stays deterministic in CI even when Redis is not provisioned.
 - On Windows, `mvnw` is the recommended path for full integration test execution.
 - Build config pins Docker API negotiation for tests to `1.44` (`api.version`) for Docker Desktop 29.x compatibility.
 
