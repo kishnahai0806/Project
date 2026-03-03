@@ -1,0 +1,314 @@
+{
+  "info": {
+    "name": "Campus Event Hub API",
+    "_postman_id": "f4a2e6fb-8a4e-4f0f-8cbe-1d9dd6d9b199",
+    "description": "Demo flow for Campus Event Hub: register/login, idempotent submit, approve, browse, and metrics.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 Register Demo User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{demoUsername}}\",\n  \"email\": \"{{demoEmail}}\",\n  \"password\": \"{{demoPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/v1/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) {",
+              "  pm.collectionVariables.set('demoUserToken', json.token);",
+              "}",
+              "pm.test('Register returns success or conflict', function () {",
+              "  pm.expect([200, 201, 409]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Login Demo User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{demoUsername}}\",\n  \"password\": \"{{demoPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('demoUserToken', json.token);",
+              "pm.test('Demo user login OK', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Login Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/v1/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('adminToken', json.token);",
+              "pm.test('Admin login OK', function () {",
+              "  pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Submit Event (Idempotent First Call)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{demoUserToken}}"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{idempotencyKey}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"{{eventTitle}}\",\n  \"description\": \"Resume demo flow event\",\n  \"location\": \"Library Lab 2\",\n  \"startTime\": \"2030-04-01T17:00:00Z\",\n  \"endTime\": \"2030-04-01T19:00:00Z\",\n  \"capacity\": 80,\n  \"categoryIds\": [1,2]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/v1/events"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('eventId', json.id);",
+              "pm.test('Event create success', function () {",
+              "  pm.expect([200, 201]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Replay Event Create (Same Idempotency-Key)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{demoUserToken}}"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{idempotencyKey}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"{{eventTitle}}\",\n  \"description\": \"Resume demo flow event\",\n  \"location\": \"Library Lab 2\",\n  \"startTime\": \"2030-04-01T17:00:00Z\",\n  \"endTime\": \"2030-04-01T19:00:00Z\",\n  \"capacity\": 80,\n  \"categoryIds\": [1,2]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/v1/events"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "pm.test('Idempotency replay returns 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Replay returns same event id', function () {",
+              "  pm.expect(json.id).to.eql(pm.collectionVariables.get('eventId'));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Approve Event (Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"comment\": \"Approved from Postman demo\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/v1/events/{{eventId}}/approve"
+      }
+    },
+    {
+      "name": "07 Browse Approved Events",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/v1/events?q=API%20Demo&status=APPROVED&page=0&size=5&sort=startTime,asc"
+      }
+    },
+    {
+      "name": "08 Weekly Metrics (Admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/v1/events/metrics/weekly?from=2026-01-01T00:00:00Z&to=2035-12-31T23:59:59Z"
+      }
+    },
+    {
+      "name": "09 Actuator Health (Public)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/actuator/health"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "demoUsername",
+      "value": "demo_user"
+    },
+    {
+      "key": "demoEmail",
+      "value": "demo_user@example.com"
+    },
+    {
+      "key": "demoPassword",
+      "value": "DemoUser@123"
+    },
+    {
+      "key": "adminUsername",
+      "value": "admin"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@123"
+    },
+    {
+      "key": "idempotencyKey",
+      "value": "event-demo-001"
+    },
+    {
+      "key": "eventTitle",
+      "value": "API Demo Event"
+    },
+    {
+      "key": "demoUserToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    }
+  ]
+}

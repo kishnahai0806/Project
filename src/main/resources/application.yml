@@ -1,0 +1,54 @@
+﻿server:
+  port: 8080
+
+spring:
+  application:
+    name: campus-event-hub
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/campus_event_hub}
+    username: ${SPRING_DATASOURCE_USERNAME:campus_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:campus_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  cache:
+    type: ${CACHE_TYPE:redis}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-key-change-me-dev-secret-key-change-me}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  seed:
+    enabled: ${APP_SEED_ENABLED:true}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO

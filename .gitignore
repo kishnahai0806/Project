@@ -1,0 +1,18 @@
+﻿# Ignore build output
+/target/
+
+# IDE files
+/.idea/
+*.iml
+/.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+
+# Local AI agent logs
+AI_WORKLOG.md
+AI_LESSONS.md
