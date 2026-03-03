@@ -1,13 +1,17 @@
-﻿name: CI
+name: CI
 
 on:
   push:
     branches: ["main", "master", "develop"]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -17,11 +21,29 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: maven
 
+      - name: Prepare Maven Wrapper
+        run: |
+          sed -i 's/\r$//' mvnw
+          chmod +x mvnw
+
+      - name: Docker info
+        run: |
+          docker version
+          docker info
+
       - name: Build and test
-        run: mvn -B clean verify
+        run: ./mvnw -B -ntp clean verify
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/**
+          if-no-files-found: ignore
 
       - name: Build Docker image
         run: docker build -t campus-event-hub:ci .
